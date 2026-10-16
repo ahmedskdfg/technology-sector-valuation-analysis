@@ -1,0 +1,41 @@
+name: Generate Monte Carlo plots
+
+on:
+  push:
+    paths:
+      - "monte_carlo_simulation.py"
+      - ".github/workflows/generate-monte-carlo-plots.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate-plots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install numpy matplotlib yfinance pandas
+
+      - name: Generate plots
+        env:
+          MPLBACKEND: Agg
+        run: python monte_carlo_simulation.py
+
+      - name: Commit generated plots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add monte_carlo_paths.png ending_price_distribution.png
+          if git diff --cached --quiet; then
+            echo "No plot changes to commit"
+          else
+            git commit -m "Generate Monte Carlo plots"
+            git push
+          fi
